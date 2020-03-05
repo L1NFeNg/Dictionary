@@ -5,6 +5,8 @@ import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,14 +17,16 @@ import java.util.List;
 
 public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
-    List<Word> allWords = new ArrayList<>();
-    boolean isUseCardView;
+    private List<Word> allWords = new ArrayList<>();
+    private boolean isUseCardView;
+    private WordViewModel wordViewModel;
 
-    public MyAdapter(boolean isUseCardView) {
+    MyAdapter(boolean isUseCardView, WordViewModel wordViewModel) {
         this.isUseCardView = isUseCardView;
+        this.wordViewModel = wordViewModel;
     }
 
-    public void setAllWords(List<Word> allWords) {
+    void setAllWords(List<Word> allWords) {
         this.allWords = allWords;
     }
 
@@ -32,19 +36,27 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
         View itemView = null;
         if (isUseCardView) {
-            itemView = layoutInflater.inflate(R.layout.cell_card, parent, false);
+            itemView = layoutInflater.inflate(R.layout.cell_card_2, parent, false);
         } else {
-            itemView = layoutInflater.inflate(R.layout.cell_normal, parent, false);
+            itemView = layoutInflater.inflate(R.layout.cell_normal_2, parent, false);
         }
         return new MyViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull final MyViewHolder holder, int position) {
-        Word word = allWords.get(position);
+        final Word word = allWords.get(position);
         holder.mTvNumber.setText(String.valueOf(word.getId()));
         holder.mTvEnglish.setText(word.getWord());
         holder.mTvChinese.setText(word.getChineseMeaning());
+        holder.mSwIsChineseInvisible.setOnCheckedChangeListener(null);
+        if (word.isChineseInVisible()) {
+            holder.mTvChinese.setVisibility(View.GONE);
+            holder.mSwIsChineseInvisible.setChecked(true);
+        } else {
+            holder.mTvChinese.setVisibility(View.VISIBLE);
+            holder.mSwIsChineseInvisible.setChecked(false);
+        }
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -53,6 +65,20 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(uri);
                 holder.itemView.getContext().startActivity(intent);
+            }
+        });
+        holder.mSwIsChineseInvisible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    holder.mTvChinese.setVisibility(View.GONE);
+                    word.setChineseInVisible(true);
+                    wordViewModel.updateWords(word);
+                } else {
+                    holder.mTvChinese.setVisibility(View.VISIBLE);
+                    word.setChineseInVisible(false);
+                    wordViewModel.updateWords(word);
+                }
             }
         });
     }
@@ -66,12 +92,14 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         TextView mTvNumber;
         TextView mTvEnglish;
         TextView mTvChinese;
+        Switch mSwIsChineseInvisible;
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
             mTvNumber = itemView.findViewById(R.id.tv_number);
             mTvEnglish = itemView.findViewById(R.id.tv_english);
             mTvChinese = itemView.findViewById(R.id.tv_chinese);
+            mSwIsChineseInvisible = itemView.findViewById(R.id.sw_isChineseInvisible);
         }
     }
 
