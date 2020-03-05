@@ -17,10 +17,6 @@ class WordRepository {
         allWordsLive = wordDao.getAllWordsLive();
     }
 
-    LiveData<List<Word>> getAllWordsLive() {
-        return allWordsLive;
-    }
-
     void insertWords(Word... words) {
         new InsertAsynTask(wordDao).execute(words);
     }
@@ -35,6 +31,14 @@ class WordRepository {
 
     void deleteAllWords(Word... words) {
         new DeleteAllAsynTask(wordDao).execute();
+    }
+
+    LiveData<List<Word>> getAllWordsLive() {
+        return allWordsLive;
+    }
+
+    LiveData<List<Word>> findWordsWithPattern(String pattern) {
+        return wordDao.findWordsWithPattern("%" + pattern + "%");
     }
 
     static class InsertAsynTask extends AsyncTask<Word, Void, Void> {
