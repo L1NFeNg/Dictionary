@@ -1,4 +1,4 @@
-package com.example.roombasic;
+package com.example.words;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -40,23 +40,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         } else {
             itemView = layoutInflater.inflate(R.layout.cell_normal_2, parent, false);
         }
-        return new MyViewHolder(itemView);
-    }
 
-    @Override
-    public void onBindViewHolder(@NonNull final MyViewHolder holder, int position) {
-        final Word word = allWords.get(position);
-        holder.mTvNumber.setText(String.valueOf(word.getId()));
-        holder.mTvEnglish.setText(word.getWord());
-        holder.mTvChinese.setText(word.getChineseMeaning());
-        holder.mSwIsChineseInvisible.setOnCheckedChangeListener(null);
-        if (word.isChineseInVisible()) {
-            holder.mTvChinese.setVisibility(View.GONE);
-            holder.mSwIsChineseInvisible.setChecked(true);
-        } else {
-            holder.mTvChinese.setVisibility(View.VISIBLE);
-            holder.mSwIsChineseInvisible.setChecked(false);
-        }
+        final MyViewHolder holder = new MyViewHolder(itemView);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -67,9 +52,11 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
                 holder.itemView.getContext().startActivity(intent);
             }
         });
+
         holder.mSwIsChineseInvisible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Word word = (Word) holder.itemView.getTag(R.id.WORD_FOR_VIEW_HOLDER);
                 if (isChecked) {
                     holder.mTvChinese.setVisibility(View.GONE);
                     word.setChineseInVisible(true);
@@ -81,6 +68,23 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
                 }
             }
         });
+        return holder;
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull final MyViewHolder holder, int position) {
+        final Word word = allWords.get(position);
+        holder.itemView.setTag(R.id.WORD_FOR_VIEW_HOLDER, word);
+        holder.mTvNumber.setText(String.valueOf(word.getId()));
+        holder.mTvEnglish.setText(word.getWord());
+        holder.mTvChinese.setText(word.getChineseMeaning());
+        if (word.isChineseInVisible()) {
+            holder.mTvChinese.setVisibility(View.GONE);
+            holder.mSwIsChineseInvisible.setChecked(true);
+        } else {
+            holder.mTvChinese.setVisibility(View.VISIBLE);
+            holder.mSwIsChineseInvisible.setChecked(false);
+        }
     }
 
     @Override
@@ -102,5 +106,4 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
             mSwIsChineseInvisible = itemView.findViewById(R.id.sw_isChineseInvisible);
         }
     }
-
 }

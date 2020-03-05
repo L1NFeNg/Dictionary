@@ -1,4 +1,4 @@
-package com.example.roombasic;
+package com.example.words;
 
 import org.junit.Test;
 
