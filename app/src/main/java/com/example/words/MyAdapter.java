@@ -10,24 +10,32 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
-import java.util.List;
+public class MyAdapter extends ListAdapter<Word, MyAdapter.MyViewHolder> {
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
-
-    private List<Word> allWords = new ArrayList<>();
     private boolean isUseCardView;
     private WordViewModel wordViewModel;
 
     MyAdapter(boolean isUseCardView, WordViewModel wordViewModel) {
+        super(new DiffUtil.ItemCallback<Word>() {
+            @Override
+            // 比较ID是否相同
+            public boolean areItemsTheSame(@NonNull Word oldItem, @NonNull Word newItem) {
+                return oldItem.getId() == newItem.getId();
+            }
+
+            @Override
+            public boolean areContentsTheSame(@NonNull Word oldItem, @NonNull Word newItem) {
+                return (oldItem.getWord().equals(newItem.getWord())
+                        && oldItem.getChineseMeaning().equals(newItem.getChineseMeaning())
+                        && oldItem.isChineseInVisible() == newItem.isChineseInVisible());
+            }
+        });
         this.isUseCardView = isUseCardView;
         this.wordViewModel = wordViewModel;
-    }
-
-    void setAllWords(List<Word> allWords) {
-        this.allWords = allWords;
     }
 
     @NonNull
@@ -73,7 +81,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull final MyViewHolder holder, int position) {
-        final Word word = allWords.get(position);
+        final Word word = getItem(position);
         holder.itemView.setTag(R.id.WORD_FOR_VIEW_HOLDER, word);
         holder.mTvNumber.setText(String.valueOf(word.getId()));
         holder.mTvEnglish.setText(word.getWord());
@@ -88,8 +96,9 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
     }
 
     @Override
-    public int getItemCount() {
-        return allWords.size();
+    public void onViewAttachedToWindow(@NonNull MyViewHolder holder) {
+        super.onViewAttachedToWindow(holder);
+        holder.mTvNumber.setText(String.valueOf(holder.getAdapterPosition() + 1));
     }
 
     static class MyViewHolder extends RecyclerView.ViewHolder {
@@ -98,7 +107,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         TextView mTvChinese;
         Switch mSwIsChineseInvisible;
 
-        public MyViewHolder(@NonNull View itemView) {
+        MyViewHolder(@NonNull View itemView) {
             super(itemView);
             mTvNumber = itemView.findViewById(R.id.tv_number);
             mTvEnglish = itemView.findViewById(R.id.tv_english);

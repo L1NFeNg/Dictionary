@@ -21,13 +21,13 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.List;
-
 
 /**
  * A simple {@link Fragment} subclass.
@@ -40,7 +40,6 @@ public class WordsFragment extends Fragment {
     private LiveData<List<Word>> filteredWords;
     private static final String VIEW_TYPE_SHP = "view_type_shp";
     private static final String IS_USING_CARD_VIEW = "is_using_card_view";
-
 
     public WordsFragment() {
         // Required empty public constructor
@@ -74,14 +73,14 @@ public class WordsFragment extends Fragment {
             // 切换视图
             case R.id.mi_switchviewtype:
                 SharedPreferences sp = requireActivity().getSharedPreferences(VIEW_TYPE_SHP, Context.MODE_PRIVATE);
-                boolean viewType = sp.getBoolean(IS_USING_CARD_VIEW,false);
+                boolean viewType = sp.getBoolean(IS_USING_CARD_VIEW, false);
                 SharedPreferences.Editor editor = sp.edit();
-                if (viewType){
+                if (viewType) {
                     mRv1.setAdapter(myAdapter1);
-                    editor.putBoolean(IS_USING_CARD_VIEW,false);
-                }else{
+                    editor.putBoolean(IS_USING_CARD_VIEW, false);
+                } else {
                     mRv1.setAdapter(myAdapter2);
-                    editor.putBoolean(IS_USING_CARD_VIEW,true);
+                    editor.putBoolean(IS_USING_CARD_VIEW, true);
                 }
                 editor.apply();
         }
@@ -112,9 +111,6 @@ public class WordsFragment extends Fragment {
                     @Override
                     public void onChanged(List<Word> words) {
                         int temp = myAdapter1.getItemCount();
-                        myAdapter1.setAllWords(words);
-                        myAdapter2.setAllWords(words);
-
                         if (temp != words.size()) {
                             myAdapter1.notifyDataSetChanged();
                             myAdapter2.notifyDataSetChanged();
@@ -141,12 +137,30 @@ public class WordsFragment extends Fragment {
         mRv1.setLayoutManager(new LinearLayoutManager(requireActivity()));
         myAdapter1 = new MyAdapter(false, wordViewModel);
         myAdapter2 = new MyAdapter(true, wordViewModel);
+        mRv1.setItemAnimator(new DefaultItemAnimator() {
+            @Override
+            public void onAnimationFinished(@NonNull RecyclerView.ViewHolder viewHolder) {
+                super.onAnimationFinished(viewHolder);
+                LinearLayoutManager linearLayoutManager = (LinearLayoutManager) mRv1.getLayoutManager();
+                if (linearLayoutManager != null) {
+                    int firstPosition = linearLayoutManager.findFirstVisibleItemPosition();
+                    int lastPostion = linearLayoutManager.findLastVisibleItemPosition();
+                    for (int i = firstPosition; i < lastPostion; i++) {
+                        MyAdapter.MyViewHolder holder = (MyAdapter.MyViewHolder) mRv1.findViewHolderForAdapterPosition(i);
+                        if (holder != null) {
+                            holder.mTvNumber.setText(String.valueOf(i + 1));
+
+                        }
+                    }
+                }
+            }
+        });
         SharedPreferences sp = requireActivity().getSharedPreferences(VIEW_TYPE_SHP, Context.MODE_PRIVATE);
-        boolean viewType = sp.getBoolean(IS_USING_CARD_VIEW,false);
-        if (viewType){
+        boolean viewType = sp.getBoolean(IS_USING_CARD_VIEW, false);
+        if (viewType) {
             mRv1.setAdapter(myAdapter2);
 
-        }else{
+        } else {
             mRv1.setAdapter(myAdapter1);
         }
 
@@ -156,12 +170,16 @@ public class WordsFragment extends Fragment {
             @Override
             public void onChanged(List<Word> words) {
                 int temp = myAdapter1.getItemCount();
-                myAdapter1.setAllWords(words);
-                myAdapter2.setAllWords(words);
-
                 if (temp != words.size()) {
-                    myAdapter1.notifyDataSetChanged();
-                    myAdapter2.notifyDataSetChanged();
+                    // 单个添加 有动画
+                    //myAdapter1.notifyItemInserted(0);
+                    //myAdapter2.notifyItemInserted(0);
+                    // 整体刷新 开销大
+                    //myAdapter1.notifyDataSetChanged();
+                    //myAdapter2.notifyDataSetChanged();
+                    mRv1.smoothScrollBy(0, -200);
+                    myAdapter1.submitList(words);
+                    myAdapter2.submitList(words);
                 }
             }
         });
